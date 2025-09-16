@@ -1,49 +1,107 @@
-## Prescribers Database
+# Medicare Part D Prescribers – SQL Analysis Project  
 
-For this exericse, you'll be working with a database derived from the [Medicare Part D Prescriber Public Use File](https://www.hhs.gov/guidance/document/medicare-provider-utilization-and-payment-data-part-d-prescriber-0). More information about the data is contained in the Methodology PDF file. See also the included entity-relationship diagram.
+This project analyzes data derived from the **Medicare Part D Prescriber Public Use File**, focusing on prescriber behavior, specialties, drug costs, opioid use, and geographic trends.  
+The project was completed as part of the **Nashville Software School (NSS) Data Analytics Bootcamp**, with an emphasis on **PostgreSQL, joins, aggregations, CASE logic, and advanced grouping sets**.  
 
-1. 
-    a. Which prescriber had the highest total number of claims (totaled over all drugs)? Report the npi and the total number of claims.
-    
-    b. Repeat the above, but this time report the nppes_provider_first_name, nppes_provider_last_org_name,  specialty_description, and the total number of claims.
+---
 
-2. 
-    a. Which specialty had the most total number of claims (totaled over all drugs)?
+## Project Overview  
 
-    b. Which specialty had the most total number of claims for opioids?
+The analysis explored prescriber and prescription data across multiple dimensions:  
 
-    c. **Challenge Question:** Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
+1. **Top Prescribers & Specialties**  
+   - Highest total claims overall and by specialty.  
+   - Specialties with the highest proportion of opioid claims.  
+   - Detection of specialties with no prescription activity.  
 
-    d. **Difficult Bonus:** *Do not attempt until you have solved all other problems!* For each specialty, report the percentage of total claims by that specialty which are for opioids. Which specialties have a high percentage of opioids?
+2. **Drug-Level Analysis**  
+   - Drugs with the highest total cost and cost per day.  
+   - Categorization of drugs into **opioid, antibiotic, or neither**.  
+   - Comparison of total spending on opioids vs. antibiotics.  
 
-3. 
-    a. Which drug (generic_name) had the highest total drug cost?
+3. **Geographic Analysis (Tennessee Focus)**  
+   - Number of **Core-Based Statistical Areas (CBSAs)** in Tennessee.  
+   - Largest and smallest CBSAs by population.  
+   - Largest Tennessee county not in a CBSA (Sevier County).  
+   - Pivot analysis of opioid prescriptions across Nashville, Memphis, Knoxville, and Chattanooga.  
 
-    b. Which drug (generic_name) has the hightest total cost per day? **Bonus: Round your cost per day column to 2 decimal places. Google ROUND to see how this works.**
+4. **Prescriber-Drug Relationships**  
+   - Identification of prescribers with high-claim drugs (≥3000 claims).  
+   - Linking prescribers to opioid vs. non-opioid prescribing.  
+   - Full list of Nashville **Pain Management Specialists** with opioid prescribing patterns (637 combinations).  
 
-4. 
-    a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs. **Hint:** You may want to use a CASE expression for this. See https://www.postgresqltutorial.com/postgresql-tutorial/postgresql-case/ 
+5. **Bonus & Advanced Queries**  
+   - Crosstab queries using PostgreSQL **tablefunc** extension for opioid claim counts by city and drug type.  
+   - Grouping sets, rollups, and cubes to compare opioid vs. non-opioid prescribing.  
+   - Top prescribers in Tennessee metropolitan areas.  
+   - Overdose analysis by Tennessee counties.  
 
-    b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
+---
 
-5. 
-    a. How many CBSAs are in Tennessee? **Warning:** The cbsa table contains information for all states, not just Tennessee.
+## Data & Schema  
 
-    b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
+The database includes the following tables:  
+- **prescriber** – Provider demographics, specialty, and location.  
+- **prescription** – Drug claims, day supply, and costs.  
+- **drug** – Drug dictionary with opioid/antibiotic flags.  
+- **cbsa / fips_county / population** – County and metro area population data.  
+- **overdose_deaths** – Tennessee overdose death counts by county.  
 
-    c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.
+Entity-Relationship Diagram: `ERD.png`  
 
-6. 
-    a. Find all rows in the prescription table where total_claims is at least 3000. Report the drug_name and the total_claim_count.
+---
 
-    b. For each instance that you found in part a, add a column that indicates whether the drug is an opioid.
+## Tools & Technologies Used  
 
-    c. Add another column to you answer from the previous part which gives the prescriber first and last name associated with each row.
+- **PostgreSQL** – Querying and relational joins  
+- **pgAdmin 4** – SQL IDE for query execution  
+- **SQL Features** –  
+  - Joins (INNER, LEFT, CROSS)  
+  - Aggregations and Grouping  
+  - CASE expressions for drug classification  
+  - CTEs for readability and modular queries  
+  - GROUPING SETS, ROLLUP, CUBE  
+  - Crosstab pivoting with `tablefunc`  
 
-7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville and the number of claims they had for each opioid. **Hint:** The results from all 3 parts will have 637 rows.
+---
 
-    a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Management) in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). **Warning:** Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
+## Key Insights  
 
-    b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
-    
-    c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
+- **Top Prescriber** – Dr. Bruce Pendley (Family Practice) with 99,707 claims.  
+- **Top Specialty** – Family Practice, with over 9.7M total claims.  
+- **Top Opioid Specialty** – Nurse Practitioners led in opioid prescribing (900,845 claims).  
+- **Top Cost Drug** – *Insulin Glargine* with $104M in total costs.  
+- **Highest Cost per Day** – *C1 Esterase Inhibitor* at $3,495/day.  
+- **Spending Comparison** – More was spent on **opioids ($105M)** than antibiotics.  
+- **Tennessee Geography** – 42 CBSAs in TN; largest: Nashville metro (1.83M population); smallest: Morristown (116K).  
+- **County Analysis** – Sevier County (95K) identified as the largest non-CBSA county.  
+- **High-Volume Prescriptions** – Over 3,000-claim drugs linked to opioid classifications and prescriber details.  
+- **City Comparisons** – Pivot analysis revealed differences in opioid prescribing patterns across TN metros.  
+
+---
+
+## Learning Outcomes  
+
+This project strengthened my SQL expertise in:  
+- Writing **complex join queries** across multiple healthcare datasets.  
+- Using **CASE, COALESCE, GROUPING SETS, ROLLUP, and CUBE** for advanced analysis.  
+- Building **crosstab pivot tables** in PostgreSQL.  
+- Connecting healthcare prescribing behavior with public health indicators.  
+- Exploring both **provider-level and geographic-level** perspectives.  
+
+---
+
+## Repository Contents  
+
+- **prescribers.backup** – PostgreSQL backup of full database  
+- **prescribers.sql** – Main SQL scripts answering project tasks  
+- **prescribers_bonus.sql** – Advanced analysis queries  
+- **prescribers_bonus_2.sql** – Grouping sets, rollups, and crosstab pivots  
+- **ERD.png** – Entity Relationship Diagram of schema  
+- **prescribers_erd_schema.pgerd** – ERD schema source file  
+- **README_task.md** – Main project tasks  
+- **README_Bonus_task.md** – Bonus task descriptions  
+
+---
+
+This project demonstrates how **SQL analysis of healthcare data** can uncover insights into prescribing patterns, opioid usage, and regional trends – providing valuable context for both healthcare providers and policymakers.  
